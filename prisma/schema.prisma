@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ENUMERATIONS
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
+enum InvoiceStatus {
+  INIT
+  PAID
+  FAILED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  MOBILE_MONEY
+}
+
+// MODELE
+model Order {
+  id                Int             @id @default(autoincrement())
+  montantTotal      Float
+  methodePaiement   PaymentMethod
+  statut            OrderStatus     @default(PENDING)
+  dateCreation      DateTime        @default(now())
+  dateModification  DateTime        @updatedAt
+
+  // Relations
+  articles          OrderItem[]
+  factures          Invoice[]
+  historiques       OrderHistory[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id           Int    @id @default(autoincrement())
+  nomMenu      String
+  prixUnitaire Float
+  sousTotal    Float
+  quantite     Int
+  orderId      Int
+  order        Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
+
+model Invoice {
+  id               Int                  @id @default(autoincrement())
+  montant          Float
+  statut           InvoiceStatus        @default(INIT)
+  dateCreation     DateTime             @default(now())
+  dateModification DateTime             @updatedAt
+  orderId          Int
+  order            Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  transactions     PaymentTransaction[]
+
+  @@map("invoices")
+}
+
+model PaymentTransaction {
+  id           Int      @id @default(autoincrement())
+  reference    String   @unique
+  montant      Float
+  datePaiement DateTime @default(now())
+  statut       InvoiceStatus
+  invoiceId    Int
+  invoice      Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("payment_transactions")
+}
+
+model OrderHistory {
+  id             Int      @id @default(autoincrement())
+  action         String
+  ancienneValeur String
+  nouvelleValeur String
+  dateAction     DateTime @default(now())
+  orderId        Int
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_histories")
+}
