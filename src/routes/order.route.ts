@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { orderController } from '../controllers/order.controller';
+import { requireRole, verifyToken } from '../middlewares/auth.middleware';
 
 const orderRouter = Router();
 
@@ -9,6 +10,8 @@ const orderRouter = Router();
  *   post:
  *     summary: Crée une nouvelle commande vide
  *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -27,8 +30,32 @@ const orderRouter = Router();
  *         description: Commande initialisée avec succès
  *       400:
  *         description: Erreur de validation
+ *       401:
+ *         description: Non authentifié
+ *       403:
+ *         description: Accès interdit
  */
-orderRouter.post("/", orderController.createOrder);
+orderRouter.post("/", verifyToken, requireRole(['CLIENT']), orderController.createOrder);
+
+/**
+ * @swagger
+ * /api/orders:
+ *   get:
+ *     summary: Liste toutes les commandes
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des commandes récupérée avec succès
+ *       401:
+ *         description: Non authentifié
+ *       403:
+ *         description: Accès interdit
+ *       500:
+ *         description: Erreur serveur
+ */
+orderRouter.get("/", verifyToken, requireRole(['BOUTIQUIER']), orderController.getAll);
 
 // Route pour la gestion du panier
 /**
@@ -37,6 +64,8 @@ orderRouter.post("/", orderController.createOrder);
  *   post:
  *     summary: Ajoute un nouvel article à une commande existante
  *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: orderId
@@ -69,8 +98,39 @@ orderRouter.post("/", orderController.createOrder);
  *         description: Article ajouté avec succès
  *       400:
  *         description: Erreur (ex. Commande déjà verrouillée)
+ *       401:
+ *         description: Non authentifié
+ *       403:
+ *         description: Accès interdit
  */
-orderRouter.post('/:orderId/items', orderController.addItem);
+orderRouter.post('/:orderId/items', verifyToken, requireRole(['CLIENT']), orderController.addItem);
+
+/**
+ * @swagger
+ * /api/orders/{orderId}:
+ *   get:
+ *     summary: Récupère les détails complets d'une commande
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: L'ID de la commande
+ *     responses:
+ *       200:
+ *         description: Détails de la commande récupérés avec succès
+ *       401:
+ *         description: Non authentifié
+ *       403:
+ *         description: Accès interdit
+ *       404:
+ *         description: Commande introuvable
+ */
+orderRouter.get("/:orderId", verifyToken, requireRole(['CLIENT', 'BOUTIQUIER']), orderController.getDetails);
 
 
 export {orderRouter} ;

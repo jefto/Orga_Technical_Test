@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { paymentController } from '../controllers/payment.controller';
+import { requireRole, verifyToken } from '../middlewares/auth.middleware';
 
 const paymentRouter = Router();
 
@@ -10,6 +11,8 @@ const paymentRouter = Router();
  *   post:
  *     summary: Effectue un paiement (partiel ou total) pour une commande
  *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: orderId
@@ -37,8 +40,12 @@ const paymentRouter = Router();
  *         description: Paiement enregistré avec succès (Invoice et Transaction créées)
  *       400:
  *         description: Erreur métier
+ *       401:
+ *         description: Non authentifié
+ *       403:
+ *         description: Accès interdit
  */
-paymentRouter.post('/:orderId/pay', paymentController.pay);
+paymentRouter.post('/:orderId/pay', verifyToken, requireRole(['CLIENT']), paymentController.pay);
 
 // Route pour mettre le statut `complete` a une commande
 /**
@@ -47,6 +54,8 @@ paymentRouter.post('/:orderId/pay', paymentController.pay);
  *   put:
  *     summary: Verrouille définitivement la commande
  *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: orderId
@@ -58,7 +67,37 @@ paymentRouter.post('/:orderId/pay', paymentController.pay);
  *         description: Commande clôturée avec succès
  *       400:
  *         description: Erreur métier
+ *       401:
+ *         description: Non authentifié
+ *       403:
+ *         description: Accès interdit
  */
-paymentRouter.put('/:orderId/complete', paymentController.complete);
+paymentRouter.put('/:orderId/complete', verifyToken, requireRole(['BOUTIQUIER']), paymentController.complete);
+
+/**
+ * @swagger
+ * /api/orders/{orderId}/payments:
+ *   get:
+ *     summary: Récupère l'historique de tous les paiements d'une commande
+ *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Liste des transactions récupérée avec succès
+ *       401:
+ *         description: Non authentifié
+ *       403:
+ *         description: Accès interdit
+ *       500:
+ *         description: Erreur serveur
+ */
+paymentRouter.get("/:orderId/payments", verifyToken, requireRole(['BOUTIQUIER']), paymentController.getOrderPayments);
 
 export {paymentRouter};

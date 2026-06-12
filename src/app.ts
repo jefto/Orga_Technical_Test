@@ -3,6 +3,7 @@ import express from "express";
 import swaggerJsDoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 
+import { authRouter } from "./routes/auth.route";
 import { healthRouter } from "./routes/health.route";
 import { orderRouter } from "./routes/order.route";
 import { paymentRouter } from "./routes/payment.route";
@@ -25,7 +26,16 @@ const swaggerOptions: swaggerJsDoc.Options = {
         url: "http://localhost:3000",
         description: "Serveur local"
       }
-    ]
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT"
+        }
+      }
+    }
   },
   apis: ["./src/routes/*.ts", "./dist/routes/*.js"]
 };
@@ -33,6 +43,7 @@ const swaggerOptions: swaggerJsDoc.Options = {
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.use("/api", healthRouter);
+app.use("/api/auth", authRouter);
 app.use("/api/orders", orderRouter);
 app.use("/api/orders", paymentRouter); // On regroupe tout sous /api/orders
 

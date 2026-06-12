@@ -29,5 +29,16 @@ export const paymentController = {
         } catch (error: any) {
             return res.status(400).json({ success: false, message: error.message });
         }
-    }
+    },
+
+    async getOrderPayments(req: Request, res: Response) {
+        try {
+            const { orderId } = req.params;
+            const payments = await paymentService.getPaymentsForOrder(Number(orderId));
+
+            return res.status(200).json({ success: true, count: payments.length, data: payments });
+        } catch (error: any) {
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    },
 };

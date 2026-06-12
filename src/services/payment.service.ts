@@ -78,5 +78,19 @@ export const paymentService = {
         });
 
         return updatedOrder;
+    },
+
+    // Lister tous les paiements liés à une commande spécifique
+    async getPaymentsForOrder(orderId: number) {
+        return prisma.paymentTransaction.findMany({
+            where: {
+                invoice: {
+                    orderId: orderId
+                }
+            },
+            orderBy: {
+                datePaiement: 'desc'
+            }
+        });
     }
 };

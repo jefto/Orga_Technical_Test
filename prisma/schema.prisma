@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // ENUMERATIONS
@@ -26,19 +27,36 @@ enum PaymentMethod {
   MOBILE_MONEY
 }
 
+enum Role {
+  CLIENT
+  BOUTIQUIER
+}
+
 // MODELE
+model User {
+  id       Int    @id @default(autoincrement())
+  email    String @unique
+  password String
+  role     Role   @default(CLIENT)
+  orders   Order[]
+
+  @@map("users")
+}
+
 model Order {
-  id                Int             @id @default(autoincrement())
-  montantTotal      Float
-  methodePaiement   PaymentMethod
-  statut            OrderStatus     @default(PENDING)
-  dateCreation      DateTime        @default(now())
-  dateModification  DateTime        @updatedAt
+  id               Int           @id @default(autoincrement())
+  montantTotal     Float
+  methodePaiement  PaymentMethod
+  statut           OrderStatus   @default(PENDING)
+  dateCreation     DateTime      @default(now())
+  dateModification DateTime      @updatedAt
+  userId           Int?
+  user             User?         @relation(fields: [userId], references: [id])
 
   // Relations
-  articles          OrderItem[]
-  factures          Invoice[]
-  historiques       OrderHistory[]
+  articles    OrderItem[]
+  factures    Invoice[]
+  historiques OrderHistory[]
 
   @@map("orders")
 }
@@ -69,13 +87,13 @@ model Invoice {
 }
 
 model PaymentTransaction {
-  id           Int      @id @default(autoincrement())
-  reference    String   @unique
+  id           Int           @id @default(autoincrement())
+  reference    String        @unique
   montant      Float
-  datePaiement DateTime @default(now())
+  datePaiement DateTime      @default(now())
   statut       InvoiceStatus
   invoiceId    Int
-  invoice      Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoice      Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   @@map("payment_transactions")
 }

@@ -10,12 +10,13 @@ const prisma = new PrismaClient();
 export const orderService = {
 
     // Créer une nouvelle commande vide
-    async createOrder(methodePaiement: 'CASH' | 'MOBILE_MONEY') {
+    async createOrder(methodePaiement: 'CASH' | 'MOBILE_MONEY', userId?: number) {
         return prisma.order.create({
             data: {
                 montantTotal: 0,
                 methodePaiement,
                 statut: 'PENDING',
+                userId,
                 historiques: {
                     create: {
                         action: 'CREATION_COMMANDE',
@@ -72,6 +73,51 @@ export const orderService = {
 
             return newItem;
         });
+    },
+
+    // Lister toutes les commandes
+    async getAllOrders() {
+        return prisma.order.findMany({
+            include: { articles: true } // On inclut les articles pour avoir un bel aperçu
+        });
+    },
+
+    // Récupérer le détail complet et calculer le statut de paiement
+    async getOrderDetails(orderId: number) {
+        const order = await prisma.order.findUnique({
+            where: { id: orderId },
+            include: {
+                articles: true,
+                factures: {
+                    include: { transactions: true } // On récupère l'historique financier
+                },
+                historiques: true
+            }
+        });
+
+        if (!order) throw new Error("Commande introuvable.");
+
+        // Calcul du total déjà payé (uniquement les factures validées)
+        const totalPaye = order.factures
+            .filter(f => f.statut === 'PAID')
+            .reduce((somme, facture) => somme + facture.montant, 0);
+
+        const resteAPayer = order.montantTotal - totalPaye;
+
+        // Détermination du statut financier textuel
+        let statutPaiement = 'IMPAYE';
+        if (resteAPayer <= 0 && order.montantTotal > 0) statutPaiement = 'PAYE_TOTALEMENT';
+        else if (totalPaye > 0 && resteAPayer > 0) statutPaiement = 'PAYE_PARTIELLEMENT';
+
+        return {
+            ...order,
+            resumeFinancier: {
+                totalSaisi: order.montantTotal,
+                totalPaye,
+                resteAPayer: resteAPayer > 0 ? resteAPayer : 0,
+                statutPaiement
+            }
+        };
     }
 
 };
