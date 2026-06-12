@@ -23,8 +23,12 @@ const swaggerOptions: swaggerJsDoc.Options = {
     },
     servers: [
       {
-        url: "http://localhost:3000",
-        description: "Serveur local"
+        url: "https://[URL-RENDER].onrender.com",
+        description: "Serveur de Production (Render)"
+      },
+      {
+        url: `http://localhost:${process.env.PORT}`,
+        description: "Serveur local (Développement)"
       }
     ],
     components: {
