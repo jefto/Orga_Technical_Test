@@ -4,6 +4,8 @@ import swaggerJsDoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 
 import { healthRouter } from "./routes/health.route";
+import { orderRouter } from "./routes/order.route";
+import { paymentRouter } from "./routes/payment.route";
 
 export const app = express();
 
@@ -31,9 +33,9 @@ const swaggerOptions: swaggerJsDoc.Options = {
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.use("/api", healthRouter);
+app.use("/api/orders", orderRouter);
+app.use("/api/orders", paymentRouter); // On regroupe tout sous /api/orders
 
 app.get("/", (_req, res) => {
   res.send("API OrgaAfrica fonctionnelle. Allez sur /api-docs pour le Swagger.");
 });
-
-

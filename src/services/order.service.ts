@@ -9,6 +9,25 @@ const prisma = new PrismaClient();
 
 export const orderService = {
 
+    // Créer une nouvelle commande vide
+    async createOrder(methodePaiement: 'CASH' | 'MOBILE_MONEY') {
+        return prisma.order.create({
+            data: {
+                montantTotal: 0,
+                methodePaiement,
+                statut: 'PENDING',
+                historiques: {
+                    create: {
+                        action: 'CREATION_COMMANDE',
+                        ancienneValeur: 'NONE',
+                        nouvelleValeur: 'PENDING'
+                    }
+                }
+            }
+        });
+    },
+
+    //Ajouter un article à une commande existante
     async addItemToOrder(orderId: number, itemData: { nomMenu: string, prixUnitaire: number, quantite: number }) {
         // 1. Vérifier si la commande existe et n'est pas complétée
         const order = await prisma.order.findUnique({
@@ -50,7 +69,9 @@ export const orderService = {
                 }
             });
 
+
             return newItem;
         });
     }
+
 };

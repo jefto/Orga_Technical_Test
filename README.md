@@ -6,13 +6,13 @@ clôturée définitivement (statut différent de `completed`), le client ou le s
 pouvoir la rouvrir, ajouter des plats et modifier les quantités.
 
 Le vrai défi technique de ce test réside dans la gestion de la facturation : il faut savoir
-jongler avec les statuts des paiements, en particulier pour le Mobile Money, afin de gérer
+manipuler les statuts des paiements, en particulier pour le Mobile Money, afin de gérer
 les factures impayées ou les compléments à payer sans jamais écraser la trace d'un paiement
 déjà effectué.
 
 # 2. Liste des attentes et fonctionnalités à mettre en place
 
-Voici exactement ce que ton API devra être capable de faire :
+Voici exactement ce que l'API devra être capable de faire :
 
 ## Gestion Globale de la Commande
 - Bloquer toute modification si le statut de la commande est `completed`.
