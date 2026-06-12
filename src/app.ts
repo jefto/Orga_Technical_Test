@@ -23,10 +23,12 @@ const swaggerOptions: swaggerJsDoc.Options = {
     },
     servers: [
       {
+        //prod
         url: "https://orga-technical-test.onrender.com",
         description: "Serveur de Production (Render)"
       },
       {
+        //local
         url: `http://localhost:${process.env.PORT}`,
         description: "Serveur local (Développement)"
       }
