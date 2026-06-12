@@ -23,7 +23,7 @@ const swaggerOptions: swaggerJsDoc.Options = {
     },
     servers: [
       {
-        url: "https://[URL-RENDER].onrender.com",
+        url: "https://orga-technical-test.onrender.com",
         description: "Serveur de Production (Render)"
       },
       {
