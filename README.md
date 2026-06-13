@@ -44,32 +44,119 @@ Voici exactement ce que l'API devra être capable de faire :
 # 3. Diagramme UML
 Se rendre dans `../resource` pour voire les diagramme pur la partie conception
 
-## 4. Demarrage technique (TypeScript + Prisma)
+# 4. Demarrage technique (TypeScript + Prisma)
 
-### Pre-requis
+## Pre-requis
 - Node.js 20+
 - PostgreSQL v17 local actif
 - Prisma v6.x.x
 
-### Installation
+## Installation
 ```bash
 npm install
 npm run prisma:generate
 ```
 
-### Lancer le projet
+## Lancer le projet
 ```bash
 npm run dev
 ```
 
-### Compiler en production
+## Compiler en production
 ```bash
 npm run build
 npm start
 ```
 
-### Prisma
+## Prisma
 ```bash
 npm run prisma:migrate
 npm run prisma:studio
 ```
+
+# 5. Documentation API (Modèles, Énumérations, Endpoints)
+
+## Modèles Prisma
+
+### User
+Gère les comptes applicatifs (authentification, identité et rôle d'accès).
+- `id` (Int, PK, auto-incrément)
+- `email` (String, unique)
+- `password` (String, hashé)
+- `role` (Role)
+- `orders` (relation 1-n vers `Order`)
+
+### Order
+Représente la commande principale d'un client, son statut global et son total financier.
+- `id` (Int, PK, auto-incrément)
+- `montantTotal` (Float)
+- `methodePaiement` (PaymentMethod)
+- `statut` (OrderStatus)
+- `dateCreation` (DateTime)
+- `dateModification` (DateTime)
+- `userId` (Int?, FK vers `User`)
+- Relations: `articles`, `factures`, `historiques`
+
+### OrderItem
+Stocke chaque ligne de panier (plat, quantité, prix unitaire et sous-total).
+- `id` (Int, PK, auto-incrément)
+- `nomMenu` (String)
+- `prixUnitaire` (Float)
+- `sousTotal` (Float)
+- `quantite` (Int)
+- `orderId` (Int, FK vers `Order`)
+
+### Invoice
+Trace les factures émises pour une commande et leur état de paiement.
+- `id` (Int, PK, auto-incrément)
+- `montant` (Float)
+- `statut` (InvoiceStatus)
+- `dateCreation` (DateTime)
+- `dateModification` (DateTime)
+- `orderId` (Int, FK vers `Order`)
+- Relation: `transactions`
+
+### PaymentTransaction
+Journalise chaque transaction de paiement liée à une facture (référence et montant encaissé).
+- `id` (Int, PK, auto-incrément)
+- `reference` (String, unique)
+- `montant` (Float)
+- `datePaiement` (DateTime)
+- `statut` (InvoiceStatus)
+- `invoiceId` (Int, FK vers `Invoice`)
+
+### OrderHistory
+Conserve l'historique métier des changements effectués sur une commande.
+- `id` (Int, PK, auto-incrément)
+- `action` (String)
+- `ancienneValeur` (String)
+- `nouvelleValeur` (String)
+- `dateAction` (DateTime)
+- `orderId` (Int, FK vers `Order`)
+
+## Énumérations
+- `OrderStatus`: `PENDING`, `PROCESSING`, `COMPLETED`, `CANCELLED`
+- `InvoiceStatus`: `INIT`, `PAID`, `FAILED`, `CANCELLED`
+- `PaymentMethod`: `CASH`, `MOBILE_MONEY`
+- `Role`: `CLIENT`, `BOUTIQUIER`
+
+## Endpoints
+
+### Auth
+- `POST /api/auth/register` (public) : crée un compte utilisateur avec un rôle (`CLIENT` ou `BOUTIQUIER`).
+- `POST /api/auth/login` (public) : authentifie l'utilisateur et retourne un token JWT.
+
+### Orders
+- `POST /api/orders` (CLIENT) : crée une nouvelle commande vide liée au client connecté.
+- `GET /api/orders` (BOUTIQUIER) : récupère la liste globale des commandes.
+- `POST /api/orders/{orderId}/items` (CLIENT) : ajoute un article (plat) à une commande ouverte.
+- `GET /api/orders/{orderId}` (CLIENT, BOUTIQUIER) : renvoie le détail d'une commande et son résumé financier.
+
+### Payments
+- `POST /api/orders/{orderId}/pay` (CLIENT) : enregistre un paiement (partiel ou total) pour une commande.
+- `PUT /api/orders/{orderId}/complete` (BOUTIQUIER) : verrouille définitivement la commande (statut `COMPLETED`).
+- `GET /api/orders/{orderId}/payments` (BOUTIQUIER) : consulte l'historique des transactions de paiement d'une commande.
+
+## Documentation Swagger
+- Local: `http://localhost:[.env.PORT]/api-docs`
+- Production (Render): `https://orga-technical-test.onrender.com/api-docs`

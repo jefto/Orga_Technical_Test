@@ -102,7 +102,8 @@ export const orderService = {
             .filter(f => f.statut === 'PAID')
             .reduce((somme, facture) => somme + facture.montant, 0);
 
-        const resteAPayer = order.montantTotal - totalPaye;
+        const resteAPayer = totalPaye < order.montantTotal ? order.montantTotal - totalPaye : 0;
+        const monnaieARendre = totalPaye > order.montantTotal ? totalPaye - order.montantTotal : 0;
 
         // Détermination du statut financier textuel
         let statutPaiement = 'IMPAYE';
@@ -114,7 +115,8 @@ export const orderService = {
             resumeFinancier: {
                 totalSaisi: order.montantTotal,
                 totalPaye,
-                resteAPayer: resteAPayer > 0 ? resteAPayer : 0,
+                resteAPayer,
+                monnaieARendre,
                 statutPaiement
             }
         };
